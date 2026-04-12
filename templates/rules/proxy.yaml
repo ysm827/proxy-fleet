@@ -1,0 +1,45 @@
+# 常用代理站点规则
+# 目标代理组: 🚀 Proxy
+
+# Google
+- DOMAIN-SUFFIX,google.com,🚀 Proxy
+- DOMAIN-SUFFIX,googleapis.com,🚀 Proxy
+- DOMAIN-SUFFIX,googlevideo.com,🚀 Proxy
+- DOMAIN-SUFFIX,gstatic.com,🚀 Proxy
+- DOMAIN-SUFFIX,ggpht.com,🚀 Proxy
+
+# GitHub
+- DOMAIN-SUFFIX,github.com,🚀 Proxy
+- DOMAIN-SUFFIX,githubusercontent.com,🚀 Proxy
+- DOMAIN-SUFFIX,githubassets.com,🚀 Proxy
+- DOMAIN-SUFFIX,github.io,🚀 Proxy
+
+# Twitter / X
+- DOMAIN-SUFFIX,twitter.com,🚀 Proxy
+- DOMAIN-SUFFIX,x.com,🚀 Proxy
+- DOMAIN-SUFFIX,twimg.com,🚀 Proxy
+- DOMAIN-SUFFIX,t.co,🚀 Proxy
+
+# Telegram
+- DOMAIN-SUFFIX,telegram.org,🚀 Proxy
+- DOMAIN-SUFFIX,t.me,🚀 Proxy
+- IP-CIDR,91.108.0.0/16,🚀 Proxy
+- IP-CIDR,149.154.160.0/20,🚀 Proxy
+
+# Discord
+- DOMAIN-SUFFIX,discord.com,🚀 Proxy
+- DOMAIN-SUFFIX,discord.gg,🚀 Proxy
+- DOMAIN-SUFFIX,discordapp.com,🚀 Proxy
+
+# Reddit
+- DOMAIN-SUFFIX,reddit.com,🚀 Proxy
+- DOMAIN-SUFFIX,redd.it,🚀 Proxy
+- DOMAIN-SUFFIX,redditstatic.com,🚀 Proxy
+
+# Wikipedia
+- DOMAIN-SUFFIX,wikipedia.org,🚀 Proxy
+- DOMAIN-SUFFIX,wikimedia.org,🚀 Proxy
+
+# Apple (部分需代理)
+- DOMAIN-SUFFIX,icloud-content.com,🚀 Proxy
+- DOMAIN-SUFFIX,itunes.apple.com,🚀 Proxy

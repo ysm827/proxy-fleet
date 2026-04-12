@@ -1,0 +1,9 @@
+# 流媒体规则
+# 目标代理组: 🎬 Streaming
+
+- DOMAIN-SUFFIX,youtube.com,🎬 Streaming
+- DOMAIN-SUFFIX,ytimg.com,🎬 Streaming
+- DOMAIN-SUFFIX,netflix.com,🎬 Streaming
+- DOMAIN-SUFFIX,nflxvideo.net,🎬 Streaming
+- DOMAIN-SUFFIX,spotify.com,🎬 Streaming
+- DOMAIN-SUFFIX,twitch.tv,🎬 Streaming

@@ -1,0 +1,90 @@
+# AI 服务分流规则
+# 目标代理组: 🤖 AI Services
+
+# OpenAI / ChatGPT
+- DOMAIN-SUFFIX,openai.com,🤖 AI Services
+- DOMAIN-SUFFIX,chatgpt.com,🤖 AI Services
+- DOMAIN-SUFFIX,oaistatic.com,🤖 AI Services
+- DOMAIN-SUFFIX,oaiusercontent.com,🤖 AI Services
+- DOMAIN-SUFFIX,sora.com,🤖 AI Services
+- DOMAIN-KEYWORD,openai,🤖 AI Services
+
+# Anthropic / Claude
+- DOMAIN-SUFFIX,anthropic.com,🤖 AI Services
+- DOMAIN-SUFFIX,claude.ai,🤖 AI Services
+- DOMAIN-KEYWORD,anthropic,🤖 AI Services
+
+# Google AI / Gemini
+- DOMAIN-SUFFIX,gemini.google.com,🤖 AI Services
+- DOMAIN-SUFFIX,aistudio.google.com,🤖 AI Services
+- DOMAIN-SUFFIX,generativelanguage.googleapis.com,🤖 AI Services
+- DOMAIN-SUFFIX,deepmind.google,🤖 AI Services
+- DOMAIN-SUFFIX,deepmind.com,🤖 AI Services
+- DOMAIN-SUFFIX,notebooklm.google,🤖 AI Services
+- DOMAIN-SUFFIX,notebooklm.google.com,🤖 AI Services
+
+# Microsoft Copilot / Azure OpenAI
+- DOMAIN-SUFFIX,copilot.microsoft.com,🤖 AI Services
+- DOMAIN-SUFFIX,copilot.cloud.microsoft,🤖 AI Services
+- DOMAIN-SUFFIX,openai.azure.com,🤖 AI Services
+- DOMAIN-KEYWORD,copilot,🤖 AI Services
+
+# GitHub Copilot
+- DOMAIN-SUFFIX,githubcopilot.com,🤖 AI Services
+- DOMAIN-SUFFIX,copilot-proxy.githubusercontent.com,🤖 AI Services
+
+# Cursor
+- DOMAIN-SUFFIX,cursor.sh,🤖 AI Services
+- DOMAIN-SUFFIX,cursor.com,🤖 AI Services
+
+# Perplexity
+- DOMAIN-SUFFIX,perplexity.ai,🤖 AI Services
+
+# Midjourney
+- DOMAIN-SUFFIX,midjourney.com,🤖 AI Services
+
+# Mistral
+- DOMAIN-SUFFIX,mistral.ai,🤖 AI Services
+
+# Meta AI / Llama
+- DOMAIN-SUFFIX,ai.meta.com,🤖 AI Services
+- DOMAIN-SUFFIX,llama.meta.com,🤖 AI Services
+
+# Hugging Face
+- DOMAIN-SUFFIX,huggingface.co,🤖 AI Services
+- DOMAIN-SUFFIX,hf.co,🤖 AI Services
+
+# Stability AI
+- DOMAIN-SUFFIX,stability.ai,🤖 AI Services
+
+# Cohere
+- DOMAIN-SUFFIX,cohere.com,🤖 AI Services
+- DOMAIN-SUFFIX,cohere.ai,🤖 AI Services
+
+# Groq
+- DOMAIN-SUFFIX,groq.com,🤖 AI Services
+
+# Together AI
+- DOMAIN-SUFFIX,together.ai,🤖 AI Services
+- DOMAIN-SUFFIX,together.xyz,🤖 AI Services
+
+# Replicate
+- DOMAIN-SUFFIX,replicate.com,🤖 AI Services
+
+# Runway / Pika / Suno / ElevenLabs
+- DOMAIN-SUFFIX,runwayml.com,🤖 AI Services
+- DOMAIN-SUFFIX,pika.art,🤖 AI Services
+- DOMAIN-SUFFIX,suno.com,🤖 AI Services
+- DOMAIN-SUFFIX,suno.ai,🤖 AI Services
+- DOMAIN-SUFFIX,elevenlabs.io,🤖 AI Services
+
+# Vercel AI / v0
+- DOMAIN-SUFFIX,v0.dev,🤖 AI Services
+
+# xAI / Grok
+- DOMAIN-SUFFIX,x.ai,🤖 AI Services
+- DOMAIN-SUFFIX,grok.com,🤖 AI Services
+
+# Bolt / Replit
+- DOMAIN-SUFFIX,bolt.new,🤖 AI Services
+- DOMAIN-SUFFIX,replit.com,🤖 AI Services
