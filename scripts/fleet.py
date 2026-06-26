@@ -231,12 +231,22 @@ for ib in existing.get("obj", []):
     if ib.get("protocol") == "vless":
         opener.open(api(f"/panel/api/inbounds/del/{ib['id']}", b""))
 
+# 3x-ui 3.4.x stores clients in dedicated tables (clients/client_inbounds) and
+# requires a non-empty, unique email — a client with email "" is silently
+# dropped from the generated xray config (clients: null → all handshakes fail).
+# 2.8.x tolerated empty email, so this stays compatible with both.
 settings = json.dumps({
-    "clients": [{"id": uuid, "flow": "xtls-rprx-vision", "email": "",
+    "clients": [{"id": uuid, "flow": "xtls-rprx-vision",
+                 "email": f"{remark}-{secrets.token_hex(3)}",
                  "limitIp": 0, "totalGB": 0, "expiryTime": 0, "enable": True,
-                 "tgId": "", "subId": "", "reset": 0}],
+                 "tgId": "", "subId": secrets.token_hex(8), "reset": 0}],
     "decryption": "none", "fallbacks": []
 })
+# NOTE on the Reality dest (= defaults.sni): pick a TLS-1.3 site whose
+# Certificate record fits Xray's hardcoded 8192-byte limit. www.microsoft.com
+# now returns an ~8273-byte cert and fails with "handshake did not complete
+# successfully" on xray-core 26.x (XTLS/Xray-core#6356) — use apple/cloudflare/
+# bing/icloud instead. Verify a new dest before switching the fleet to it.
 stream = json.dumps({
     "network": "tcp", "security": "reality", "externalProxy": [],
     "realitySettings": {
