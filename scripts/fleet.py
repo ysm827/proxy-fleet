@@ -21,6 +21,12 @@ CONFIG_PATH = SKILL_DIR / "config.json"
 EXAMPLE_CONFIG_PATH = SKILL_DIR / "config.example.json"
 RULES_DIR = SKILL_DIR / "templates" / "rules"
 
+# Pin the 3x-ui version the whole fleet runs on. The panel API client below
+# (login → session cookie → /panel/api/inbounds) handles both the 2.8.x API
+# and the CSRF-token login that 3.4.x added — see REMOTE_INBOUND_SCRIPT. When
+# bumping, re-verify that login flow still holds against the new release.
+XUI_VERSION = "v3.4.1"
+
 # ── Helpers ──────────────────────────────────────────────────
 
 def load_config():
@@ -135,9 +141,9 @@ def install_3xui(host, creds):
     if installed:
         print(f"  [{host}] 3x-ui already installed, skipping install")
     else:
-        print(f"  [{host}] Installing 3x-ui (this may take 1-2 minutes)...")
+        print(f"  [{host}] Installing 3x-ui {XUI_VERSION} (this may take 1-2 minutes)...")
         ssh(host,
-            "echo 'y' | bash <(curl -Ls https://raw.githubusercontent.com/MHSanaei/3x-ui/master/install.sh)",
+            f"echo 'y' | bash <(curl -Ls https://raw.githubusercontent.com/MHSanaei/3x-ui/{XUI_VERSION}/install.sh) {XUI_VERSION}",
             timeout=180, check=False)
         print(f"  [{host}] Install complete")
 
@@ -155,7 +161,7 @@ def install_3xui(host, creds):
 # ── VLESS+Reality Inbound ────────────────────────────────────
 
 REMOTE_INBOUND_SCRIPT = textwrap.dedent(r'''
-import json, subprocess, sys, urllib.request, urllib.parse, http.cookiejar, secrets, glob
+import json, subprocess, sys, re, urllib.request, urllib.parse, http.cookiejar, secrets, glob
 
 port = int(sys.argv[1])
 remark = sys.argv[2]
@@ -169,7 +175,8 @@ candidates = glob.glob("/usr/local/x-ui/bin/xray-linux-*")
 XRAY = candidates[0] if candidates else "/usr/local/x-ui/bin/xray-linux-amd64"
 
 # Generate x25519 keys
-# Xray v26+: "PrivateKey: ... / Password: ... / Hash32: ..."
+# Xray v26+:  "PrivateKey: ... / Password: ... / Hash32: ..."
+# Xray v26.x: "PrivateKey: ... / Password (PublicKey): ... / Hash32: ..."
 # Xray older: "Private key: ... / Public key: ..."
 keys_out = subprocess.check_output([XRAY, "x25519"]).decode()
 kv = {}
@@ -179,7 +186,13 @@ for l in keys_out.strip().splitlines():
         kv[k.strip()] = v.strip()
 
 priv = kv.get("PrivateKey") or kv.get("Private key", "")
-pub = kv.get("Password") or kv.get("Public key", "")
+# Public-key field label varies by Xray version: "Password",
+# "Password (PublicKey)" (v26+), or "Public key" (older). Match by prefix.
+pub = next(
+    (v for k, v in kv.items()
+     if k.startswith("Password") or k.lower().startswith("public key")),
+    "",
+)
 
 if not priv or not pub:
     print(json.dumps({"success": False, "error": f"Failed to parse x25519 output: {kv}"}))
@@ -188,21 +201,35 @@ if not priv or not pub:
 uuid = subprocess.check_output([XRAY, "uuid"]).decode().strip()
 sid = secrets.token_hex(4)
 
-# Login
+# Login. 3x-ui 3.4.x guards POSTs with a CSRF token embedded in the login
+# page (<meta name="csrf-token">) and paired with the session cookie; 2.8.x
+# has neither. Fetch "/" first, then send the token as X-CSRF-Token on every
+# request (omitted when absent, so the same flow works on both versions).
 panel = f"http://localhost:{panel_port}"
 cj = http.cookiejar.CookieJar()
 opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cj))
-opener.open(f"{panel}/login",
-    urllib.parse.urlencode({"username": username, "password": password}).encode())
 
-# Delete existing VLESS inbounds to avoid duplicates
-req = urllib.request.Request(f"{panel}/panel/api/inbounds/list")
-resp = opener.open(req)
-existing = json.loads(resp.read())
+home = opener.open(f"{panel}/").read().decode("utf-8", "replace")
+m = re.search(r'name="csrf-token"\s+content="([^"]+)"', home)
+csrf = m.group(1) if m else ""
+
+def api(path, data=None, json_body=False):
+    headers = {}
+    if csrf:
+        headers["X-CSRF-Token"] = csrf
+    if json_body:
+        headers["Content-Type"] = "application/json"
+    return urllib.request.Request(f"{panel}{path}", data, headers)
+
+opener.open(api("/login",
+    urllib.parse.urlencode({"username": username, "password": password}).encode()))
+
+# Delete existing VLESS inbounds to avoid duplicates. del/ is a POST route
+# (3.4.x returns 404 for GET) — pass an empty body to force the POST method.
+existing = json.loads(opener.open(api("/panel/api/inbounds/list")).read())
 for ib in existing.get("obj", []):
     if ib.get("protocol") == "vless":
-        dreq = urllib.request.Request(f"{panel}/panel/api/inbounds/del/{ib['id']}")
-        opener.open(dreq)
+        opener.open(api(f"/panel/api/inbounds/del/{ib['id']}", b""))
 
 settings = json.dumps({
     "clients": [{"id": uuid, "flow": "xtls-rprx-vision", "email": "",
@@ -229,10 +256,7 @@ body = json.dumps({
     "settings": settings, "streamSettings": stream, "sniffing": sniffing
 }).encode()
 
-req = urllib.request.Request(f"{panel}/panel/api/inbounds/add", body,
-    {"Content-Type": "application/json"})
-resp = opener.open(req)
-result = json.loads(resp.read())
+result = json.loads(opener.open(api("/panel/api/inbounds/add", body, json_body=True)).read())
 
 print(json.dumps({
     "success": result.get("success", False),
@@ -255,7 +279,7 @@ def create_inbound(host, port, remark, cfg):
 # ── Remote Query ─────────────────────────────────────────────
 
 REMOTE_QUERY_SCRIPT = textwrap.dedent(r'''
-import json, urllib.request, urllib.parse, http.cookiejar, subprocess, sys, glob
+import json, urllib.request, urllib.parse, http.cookiejar, subprocess, sys, glob, re
 
 panel_port = int(sys.argv[1])
 username = sys.argv[2]
@@ -269,14 +293,24 @@ inbounds = []
 xver = "?"
 
 try:
-    opener.open(f"{panel}/login",
-        urllib.parse.urlencode({"username": username, "password": password}).encode())
-    resp = opener.open(f"{panel}/panel/api/inbounds/list")
+    # 3.4.x: grab the CSRF token from the login page and send it as a header
+    # (paired with the session cookie). 2.8.x has no token, so hdr stays empty.
+    home = opener.open(f"{panel}/").read().decode("utf-8", "replace")
+    m = re.search(r'name="csrf-token"\s+content="([^"]+)"', home)
+    hdr = {"X-CSRF-Token": m.group(1)} if m else {}
+    opener.open(urllib.request.Request(f"{panel}/login",
+        urllib.parse.urlencode({"username": username, "password": password}).encode(), hdr))
+    resp = opener.open(urllib.request.Request(f"{panel}/panel/api/inbounds/list", headers=hdr))
     data = json.loads(resp.read())
 
+    # 2.8.x returns streamSettings/settings as JSON strings; 3.4.x returns
+    # them as already-parsed objects. Accept either.
+    def _obj(v):
+        return v if isinstance(v, dict) else json.loads(v or "{}")
+
     for ib in data.get("obj", []):
-        stream = json.loads(ib.get("streamSettings", "{}"))
-        settings = json.loads(ib.get("settings", "{}"))
+        stream = _obj(ib.get("streamSettings"))
+        settings = _obj(ib.get("settings"))
         reality = stream.get("realitySettings", {})
         clients = settings.get("clients", [])
         inbounds.append({
